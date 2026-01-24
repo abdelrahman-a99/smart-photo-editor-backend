@@ -1,10 +1,14 @@
 import os
+from dotenv import load_dotenv
 from flask import Flask, jsonify, request
 from app.models.db import db
 from app.models.image_log import ImageLog
 from sqlalchemy import text
 from flask_restx import Api
 from flask_cors import CORS
+
+# Load environment variables from .env file
+load_dotenv()
 
 api = Api(
     title="Smart Photo Editor API",
@@ -16,8 +20,11 @@ api = Api(
 def create_app():
     app = Flask(__name__, instance_relative_config=True)
     
-    # Enable CORS
-    CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
+    # Enable CORS with environment-based configuration
+    cors_origins = os.environ.get('CORS_ORIGINS', 'http://localhost:3000')
+    # Support comma-separated origins for multiple allowed domains
+    origins_list = [origin.strip() for origin in cors_origins.split(',')]
+    CORS(app, resources={r"/*": {"origins": origins_list}})
 
     db_path = os.path.join(app.instance_path, 'photo_editor.db')
     app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
